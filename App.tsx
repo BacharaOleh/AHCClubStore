@@ -91,6 +91,18 @@ const App: React.FC = () => {
 
     return () => clearTimeout(timer);
   }, [activeCategory, collectionStatus, collections]);
+  
+  // This useEffect ensures the data in the modal is always in sync with the main app state.
+  // When a pledge is successful, `collections` state updates, and this effect will then
+  // update the `selectedCollection` state, causing the modal to re-render with the new progress.
+  useEffect(() => {
+    if (selectedCollection) {
+      const updatedCollection = collections.find(c => c.id === selectedCollection.id);
+      if (updatedCollection) {
+        setSelectedCollection(updatedCollection);
+      }
+    }
+  }, [collections]);
 
 
   const handleCategoryChange = (category: string) => {
@@ -105,37 +117,40 @@ const App: React.FC = () => {
     }
   };
   
-  const handleSuccessfulPledge = (collectionId: string, amountStr: string) => {
+  const handleSuccessfulTransaction = (collectionId: string, amountStr: string) => {
     const amount = parseFloat(amountStr);
     
-    // Update collection state
-    setCollections(prevCollections =>
-      prevCollections.map(c => {
-        if (c.id === collectionId && c.status === 'kickstarter') {
-          return {
-            ...c,
-            fundingRaised: (c.fundingRaised || 0) + amount,
-            backers: (c.backers || 0) + 1,
-          };
+    setCollections(prevCollections => {
+      let updatedCollection: Collection | undefined;
+
+      const newCollections = prevCollections.map(c => {
+        if (c.id === collectionId) {
+          const updated = { ...c };
+          // If it's a kickstarter, update its funding stats
+          if (updated.status === 'kickstarter') {
+            updated.fundingRaised = (updated.fundingRaised || 0) + amount;
+            updated.backers = (updated.backers || 0) + 1;
+          }
+          updatedCollection = updated;
+          return updated;
         }
         return c;
-      })
-    );
-
-    // Add to transaction history if wallet is connected
-    if (wallet) {
-      const collection = collections.find(c => c.id === collectionId);
-      if (collection) {
+      });
+      
+      // After updating the collections array, record the transaction in history using the fresh data
+      if (wallet && updatedCollection) {
           const newRecord: TransactionRecord = {
-            collectionId: collection.id,
-            collectionName: collection.name,
+            collectionId: updatedCollection.id,
+            collectionName: updatedCollection.name,
             amount: amountStr,
             date: new Date().toISOString(),
-            type: collection.status === 'kickstarter' ? 'pledge' : 'purchase'
+            type: updatedCollection.status === 'kickstarter' ? 'pledge' : 'purchase'
           };
           addHistory(wallet.account.address, newRecord);
       }
-    }
+
+      return newCollections;
+    });
   };
 
 
@@ -256,7 +271,7 @@ const App: React.FC = () => {
         <CollectionModal 
           collection={selectedCollection}
           onClose={() => setSelectedCollection(null)}
-          onPledgeSuccess={handleSuccessfulPledge}
+          onSuccessfulTransaction={handleSuccessfulTransaction}
         />
       )}
     </div>

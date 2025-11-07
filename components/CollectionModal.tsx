@@ -12,7 +12,7 @@ import { Toast } from './Toast';
 interface CollectionModalProps {
   collection: Collection;
   onClose: () => void;
-  onPledgeSuccess: (collectionId: string, amount: string) => void;
+  onSuccessfulTransaction: (collectionId: string, amount: string) => void;
 }
 
 const getDaysLeft = (endDateString?: string) => {
@@ -65,7 +65,7 @@ const KickstarterInfo: React.FC<{ collection: Collection }> = ({ collection }) =
     );
 };
 
-export const CollectionModal: React.FC<CollectionModalProps> = ({ collection, onClose, onPledgeSuccess }) => {
+export const CollectionModal: React.FC<CollectionModalProps> = ({ collection, onClose, onSuccessfulTransaction }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -128,7 +128,7 @@ export const CollectionModal: React.FC<CollectionModalProps> = ({ collection, on
         : 'Purchase successful!';
         
       showToast(successMessage, 'success');
-      onPledgeSuccess(collection.id, collection.price);
+      onSuccessfulTransaction(collection.id, collection.price);
       
     } catch (error) {
       if (error instanceof UserRejectsError) {
