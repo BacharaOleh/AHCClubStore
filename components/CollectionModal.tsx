@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import type { Collection } from '../types';
 import { TonIcon } from './icons/TonIcon';
 import { UserGroupIcon } from './icons/UserGroupIcon';
@@ -31,54 +32,40 @@ const KickstarterInfo: React.FC<{ collection: Collection }> = ({ collection }) =
     const daysLeft = getDaysLeft(collection.endDate);
 
     return (
-        <div>
-            <div className="my-6">
-                <div className="w-full bg-slate-700 rounded-full h-2.5">
-                    <div 
-                        className="bg-slate-200 h-2.5 rounded-full" 
-                        style={{ width: `${progress}%` }}
-                    ></div>
+        <div className="my-6">
+            <div className="w-full bg-slate-700 rounded-full h-2.5">
+                <div 
+                    className="bg-slate-200 h-2.5 rounded-full" 
+                    style={{ width: `${progress}%` }}
+                ></div>
+            </div>
+            <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div>
+                    <p className="text-xl font-bold">{Math.floor(progress)}%</p>
+                    <p className="text-xs text-slate-400">Funded</p>
                 </div>
-                <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                    <div>
-                        <p className="text-xl font-bold">{Math.floor(progress)}%</p>
-                        <p className="text-xs text-slate-400">Funded</p>
-                    </div>
-                     <div>
-                        <p className="text-xl font-bold flex items-center justify-center gap-1"><TonIcon className="w-4 h-4" />{collection.fundingRaised}</p>
-                        <p className="text-xs text-slate-400">Raised of {collection.fundingGoal} TON</p>
-                    </div>
-                     <div>
-                        <p className="text-xl font-bold flex items-center justify-center gap-1.5"><UserGroupIcon className="w-4 h-4"/>{collection.backers}</p>
-                        <p className="text-xs text-slate-400">Backers</p>
-                    </div>
-                     <div>
-                        <p className="text-xl font-bold flex items-center justify-center gap-1.5"><ClockIcon className="w-4 h-4"/>{daysLeft.value}</p>
-                        <p className="text-xs text-slate-400">{daysLeft.value === 1 ? 'day left' : 'days left'}</p>
-                    </div>
+                 <div>
+                    <p className="text-xl font-bold flex items-center justify-center gap-1"><TonIcon className="w-4 h-4" />{collection.fundingRaised}</p>
+                    <p className="text-xs text-slate-400">Raised of {collection.fundingGoal} TON</p>
+                </div>
+                 <div>
+                    <p className="text-xl font-bold flex items-center justify-center gap-1.5"><UserGroupIcon className="w-4 h-4"/>{collection.backers}</p>
+                    <p className="text-xs text-slate-400">Backers</p>
+                </div>
+                 <div>
+                    <p className="text-xl font-bold flex items-center justify-center gap-1.5"><ClockIcon className="w-4 h-4"/>{daysLeft.value}</p>
+                    <p className="text-xs text-slate-400">{daysLeft.value === 1 ? 'day left' : 'days left'}</p>
                 </div>
             </div>
-
-            <button className="w-full flex items-center justify-center gap-2 bg-slate-100 text-slate-900 hover:bg-slate-200 font-bold py-3 px-6 rounded-full text-lg transition-all duration-300 transform hover:scale-105">
-                <TonIcon className="w-6 h-6" />
-                Back this Project
-            </button>
         </div>
     );
 };
 
-const ReleasedInfo: React.FC = () => {
-    return (
-        <button className="w-full flex items-center justify-center gap-2 bg-slate-100 text-slate-900 hover:bg-slate-200 font-bold py-3 px-6 rounded-full text-lg transition-all duration-300 transform hover:scale-105">
-            <TonIcon className="w-6 h-6" />
-            Buy Sticker Pack for 0.05 TON
-        </button>
-    );
-}
-
-
 export const CollectionModal: React.FC<CollectionModalProps> = ({ collection, onClose }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [isMinting, setIsMinting] = useState(false);
+  const [tonConnectUI] = useTonConnectUI();
+  const wallet = useTonWallet();
 
   useEffect(() => {
     setIsVisible(true);
@@ -96,6 +83,63 @@ export const CollectionModal: React.FC<CollectionModalProps> = ({ collection, on
   const handleClose = () => {
     setIsVisible(false);
     setTimeout(onClose, 300);
+  };
+
+  const handleMint = async () => {
+    if (!wallet) {
+      alert('Please connect your wallet first.');
+      return;
+    }
+    if (!collection.price || !collection.collectionAddress) {
+      alert('This collection is not available for minting at the moment.');
+      return;
+    }
+
+    setIsMinting(true);
+
+    const amountInNanotons = (parseFloat(collection.price) * 1e9).toString();
+
+    const transaction = {
+      validUntil: Math.floor(Date.now() / 1000) + 360, // 6 minutes from now
+      messages: [
+        {
+          address: collection.collectionAddress,
+          amount: amountInNanotons,
+          // payload: btoa(`Mint ${collection.name}`) // Example of a simple text payload
+        },
+      ],
+    };
+
+    try {
+      await tonConnectUI.sendTransaction(transaction);
+      alert('Transaction sent successfully! Please check your wallet for confirmation.');
+      handleClose();
+    } catch (error) {
+      console.error('Transaction error:', error);
+      // It's common for the error to be an empty object when the user cancels the transaction.
+      // We provide a generic message in that case.
+      alert('Transaction was cancelled or failed.');
+    } finally {
+      setIsMinting(false);
+    }
+  };
+
+  const renderActionButton = () => {
+    const buttonText =
+      collection.status === 'kickstarter'
+        ? `Back for ${collection.price} TON`
+        : `Buy for ${collection.price} TON`;
+
+    return (
+      <button
+        onClick={handleMint}
+        disabled={isMinting || !collection.price || !collection.collectionAddress}
+        className="w-full flex items-center justify-center gap-2 bg-slate-100 text-slate-900 font-bold py-3 px-6 rounded-full text-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
+      >
+        <TonIcon className="w-6 h-6" />
+        {isMinting ? 'Processing...' : buttonText}
+      </button>
+    );
   };
 
   return (
@@ -136,8 +180,9 @@ export const CollectionModal: React.FC<CollectionModalProps> = ({ collection, on
                 <p className="text-md text-slate-300 ml-3">by {collection.creator}</p>
             </div>
             
-            {collection.status === 'kickstarter' ? <KickstarterInfo collection={collection} /> : <ReleasedInfo />}
+            {collection.status === 'kickstarter' ? <KickstarterInfo collection={collection} /> : <div className="my-6"></div>}
 
+            {renderActionButton()}
 
             <div className="mt-6">
                 <h3 className="text-lg font-semibold text-slate-300 border-b border-slate-700 pb-2 mb-4">Stickers in this collection</h3>

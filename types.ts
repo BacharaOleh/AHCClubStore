@@ -13,6 +13,8 @@ export interface Collection {
   coverImageUrl: string;
   stickers: Sticker[];
   status: 'kickstarter' | 'released';
+  collectionAddress: string; // TON address of the NFT collection contract
+  price: string; // Price in TON as a string
   // Optional fields for Kickstarter campaigns
   fundingGoal?: number;
   fundingRaised?: number;
