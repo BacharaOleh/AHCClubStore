@@ -34,7 +34,7 @@ export const collections: Collection[] = [
   },
   
   {
-    id: 'col3',
+    id: 'col2',
     name: 'Aid_crypto',
     creator: 'Floyw',
     creatorAvatarUrl: 'https://i.ibb.co/sJFk6Y25/photo-2025-04-16-19-42-48.jpg',
@@ -56,7 +56,7 @@ export const collections: Collection[] = [
   },
  
   {
-    id: 'col6',
+    id: 'col3',
     name: 'Cool Cats',
     creator: 'Cool Cats NFT',
     creatorAvatarUrl: 'https://picsum.photos/seed/coolcats-creator/100/100',
