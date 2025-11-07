@@ -4,7 +4,6 @@ import { useTonWallet } from '@tonconnect/ui-react';
 import { Header } from './components/Header';
 import { CollectionCard } from './components/CollectionCard';
 import { Footer } from './components/Footer';
-import { collections as initialCollections } from './constants';
 import type { Collection, TransactionRecord } from './types';
 import { CollectionModal } from './components/CollectionModal';
 import { NavBar } from './components/NavBar';
@@ -24,27 +23,50 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return newArray;
 };
 
-
 const App: React.FC = () => {
   const [introVisible, setIntroVisible] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
   const [activeCategory, setActiveCategory] = useState('Featured');
-  const [collections, setCollections] = useState<Collection[]>(initialCollections);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [displayedCollections, setDisplayedCollections] = useState<Collection[]>([]);
   const [contentVisible, setContentVisible] = useState(false);
   const [gridCols, setGridCols] = useState(3);
   const [collectionStatus, setCollectionStatus] = useState<'released' | 'kickstarter'>('released');
   
   const wallet = useTonWallet();
-
+  
+  // Fetch collections from the API on mount
   useEffect(() => {
-    // Trigger animations on mount
+    const fetchCollections = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await fetch('/api/collections');
+        if (!response.ok) {
+          throw new Error('Failed to fetch collections');
+        }
+        const data: Collection[] = await response.json();
+        setCollections(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCollections();
+    
+    // Trigger intro animations
     const timer = setTimeout(() => {
       setIntroVisible(true);
       setContentVisible(true);
     }, 100);
     return () => clearTimeout(timer);
   }, []);
+
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -93,8 +115,6 @@ const App: React.FC = () => {
   }, [activeCategory, collectionStatus, collections]);
   
   // This useEffect ensures the data in the modal is always in sync with the main app state.
-  // When a pledge is successful, `collections` state updates, and this effect will then
-  // update the `selectedCollection` state, causing the modal to re-render with the new progress.
   useEffect(() => {
     if (selectedCollection) {
       const updatedCollection = collections.find(c => c.id === selectedCollection.id);
@@ -102,7 +122,7 @@ const App: React.FC = () => {
         setSelectedCollection(updatedCollection);
       }
     }
-  }, [collections]);
+  }, [collections, selectedCollection]);
 
 
   const handleCategoryChange = (category: string) => {
@@ -117,40 +137,42 @@ const App: React.FC = () => {
     }
   };
   
-  const handleSuccessfulTransaction = (collectionId: string, amountStr: string) => {
-    const amount = parseFloat(amountStr);
+  const handleSuccessfulTransaction = async (updatedCollection: Collection) => {
+    // Optimistically update the UI
+    const previousCollections = collections;
+    setCollections(prev => prev.map(c => c.id === updatedCollection.id ? updatedCollection : c));
     
-    setCollections(prevCollections => {
-      let updatedCollection: Collection | undefined;
-
-      const newCollections = prevCollections.map(c => {
-        if (c.id === collectionId) {
-          const updated = { ...c };
-          // If it's a kickstarter, update its funding stats
-          if (updated.status === 'kickstarter') {
-            updated.fundingRaised = (updated.fundingRaised || 0) + amount;
-            updated.backers = (updated.backers || 0) + 1;
-          }
-          updatedCollection = updated;
-          return updated;
-        }
-        return c;
+    // Add to local transaction history
+    if (wallet) {
+      const newRecord: TransactionRecord = {
+        collectionId: updatedCollection.id,
+        collectionName: updatedCollection.name,
+        amount: updatedCollection.price, // Note: This assumes the pledge amount is the price
+        date: new Date().toISOString(),
+        type: updatedCollection.status === 'kickstarter' ? 'pledge' : 'purchase'
+      };
+      addHistory(wallet.account.address, newRecord);
+    }
+    
+    // Persist the change to the server
+    try {
+      const response = await fetch('/api/collections', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedCollection),
       });
-      
-      // After updating the collections array, record the transaction in history using the fresh data
-      if (wallet && updatedCollection) {
-          const newRecord: TransactionRecord = {
-            collectionId: updatedCollection.id,
-            collectionName: updatedCollection.name,
-            amount: amountStr,
-            date: new Date().toISOString(),
-            type: updatedCollection.status === 'kickstarter' ? 'pledge' : 'purchase'
-          };
-          addHistory(wallet.account.address, newRecord);
+      if (!response.ok) {
+        // If the API call fails, revert the optimistic update
+        setCollections(previousCollections);
+        console.error("Failed to save collection update to server");
+        // Optionally show a toast to the user
       }
-
-      return newCollections;
-    });
+    } catch (error) {
+      setCollections(previousCollections);
+      console.error("Error saving collection update:", error);
+    }
   };
 
 
@@ -167,6 +189,13 @@ const App: React.FC = () => {
   };
   
   const renderContent = () => {
+    if (isLoading) {
+        return <div className="text-center py-16 text-slate-400">Loading collections...</div>;
+    }
+    if (error) {
+        return <div className="text-center py-16 text-red-400">Error: {error}</div>;
+    }
+
     if (activeCategory === 'My Activity') {
       return <TransactionHistory walletAddress={wallet?.account.address ?? null} />;
     }

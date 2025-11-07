@@ -12,7 +12,7 @@ import { Toast } from './Toast';
 interface CollectionModalProps {
   collection: Collection;
   onClose: () => void;
-  onSuccessfulTransaction: (collectionId: string, amount: string) => void;
+  onSuccessfulTransaction: (updatedCollection: Collection) => void;
 }
 
 const getDaysLeft = (endDateString?: string) => {
@@ -107,8 +107,9 @@ export const CollectionModal: React.FC<CollectionModalProps> = ({ collection, on
     }
 
     setIsProcessing(true);
-
-    const amountInNanotons = (parseFloat(collection.price) * 1e9).toString();
+    
+    const amount = parseFloat(collection.price);
+    const amountInNanotons = (amount * 1e9).toString();
 
     const transaction = {
       validUntil: Math.floor(Date.now() / 1000) + 360, // 6 minutes from now
@@ -128,7 +129,15 @@ export const CollectionModal: React.FC<CollectionModalProps> = ({ collection, on
         : 'Purchase successful!';
         
       showToast(successMessage, 'success');
-      onSuccessfulTransaction(collection.id, collection.price);
+      
+      // Create the updated collection object to pass to the parent
+      const updatedCollection = { ...collection };
+      if (updatedCollection.status === 'kickstarter') {
+          updatedCollection.fundingRaised = (updatedCollection.fundingRaised || 0) + amount;
+          updatedCollection.backers = (updatedCollection.backers || 0) + 1;
+      }
+      
+      onSuccessfulTransaction(updatedCollection);
       
     } catch (error) {
       if (error instanceof UserRejectsError) {
