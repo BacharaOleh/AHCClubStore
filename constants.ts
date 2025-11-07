@@ -16,7 +16,7 @@ const STORE_WALLET_ADDRESS = 'UQCw9Rg6XOwKRehOD2qBOscw67s58Bv715f-lVMWbELFpRLm';
 export const collections: Collection[] = [
 
   {
-    id: 'col3',
+    id: 'col2',
     name: 'Aid_crypto',
     creator: 'Floyw',
     creatorAvatarUrl: 'https://i.ibb.co/sJFk6Y25/photo-2025-04-16-19-42-48.jpg',
@@ -38,7 +38,7 @@ export const collections: Collection[] = [
   },
  
   {
-    id: 'col5',
+    id: 'col1',
     name: 'AHC',
     creator: 'Alternative Holders Club',
     creatorAvatarUrl: 'https://e7.pngegg.com/pngimages/761/800/png-clipart-panda-eating-bamboo-eating-panda-animals-pandas.png',
@@ -58,7 +58,7 @@ export const collections: Collection[] = [
     ],
   },
   {
-    id: 'col6',
+    id: 'col3',
     name: 'Cool Cats',
     creator: 'Cool Cats NFT',
     creatorAvatarUrl: 'https://picsum.photos/seed/coolcats-creator/100/100',
