@@ -14,27 +14,9 @@ const STORE_WALLET_ADDRESS = 'UQCw9Rg6XOwKRehOD2qBOscw67s58Bv715f-lVMWbELFpRLm';
 
 
 export const collections: Collection[] = [
+
   {
-    id: 'col1',
-    name: 'AHC Crypto Pandas',
-    creator: 'AHC Crypto',
-    creatorAvatarUrl: 'https://storage.googleapis.com/aistudio-hosting/workspace-assets/original/a0a10c71-3a0e-4c7a-9c7b-7b567d022b3b.jpeg',
-    coverImageUrl: 'https://storage.googleapis.com/aistudio-hosting/workspace-assets/original/a0a10c71-3a0e-4c7a-9c7b-7b567d022b3b.jpeg',
-    status: 'released',
-    collectionAddress: STORE_WALLET_ADDRESS,
-    price: '0.05',
-    stickers: [
-      { id: 's1', name: 'Panda Sticker 1', imageUrl: 'https://picsum.photos/seed/panda1/200/200' },
-      { id: 's2', name: 'Panda Sticker 2', imageUrl: 'https://picsum.photos/seed/panda2/200/200' },
-      { id: 's3', name: 'Panda Sticker 3', imageUrl: 'https://picsum.photos/seed/panda3/200/200' },
-      { id: 's4', name: 'Panda Sticker 4', imageUrl: 'https://picsum.photos/seed/panda4/200/200' },
-      { id: 's5', name: 'Panda Sticker 5', imageUrl: 'https://picsum.photos/seed/panda5/200/200' },
-      { id: 's6', name: 'Panda Sticker 6', imageUrl: 'https://picsum.photos/seed/panda6/200/200' },
-    ],
-  },
-  
-  {
-    id: 'col2',
+    id: 'col3',
     name: 'Aid_crypto',
     creator: 'Floyw',
     creatorAvatarUrl: 'https://i.ibb.co/sJFk6Y25/photo-2025-04-16-19-42-48.jpg',
@@ -56,7 +38,27 @@ export const collections: Collection[] = [
   },
  
   {
-    id: 'col3',
+    id: 'col5',
+    name: 'AHC',
+    creator: 'Alternative Holders Club',
+    creatorAvatarUrl: 'https://e7.pngegg.com/pngimages/761/800/png-clipart-panda-eating-bamboo-eating-panda-animals-pandas.png',
+    coverImageUrl: 'https://i.ibb.co/JRZgyfP8/photo-2025-09-30-00-23-25-2.jpg',
+    status: 'kickstarter',
+    collectionAddress: STORE_WALLET_ADDRESS,
+    price: '0.1', // Pledge amount
+    fundingGoal: 25,
+    fundingRaised: 0,
+    backers: 0,
+    endDate: getFutureDate(28),
+    stickers: [
+      { id: 's19', name: 'Moonbird #2642', imageUrl: 'https://picsum.photos/seed/bird1/200/200' },
+      { id: 's20', name: 'Moonbird #7963', imageUrl: 'https://picsum.photos/seed/bird2/200/200' },
+      { id: 's21', name: 'Moonbird #6225', imageUrl: 'https://picsum.photos/seed/bird3/200/200' },
+      { id: 's22', name: 'Moonbird #3730', imageUrl: 'https://picsum.photos/seed/bird4/200/200' },
+    ],
+  },
+  {
+    id: 'col6',
     name: 'Cool Cats',
     creator: 'Cool Cats NFT',
     creatorAvatarUrl: 'https://picsum.photos/seed/coolcats-creator/100/100',
