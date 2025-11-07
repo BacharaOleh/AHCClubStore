@@ -12,6 +12,7 @@ import { View2ColIcon } from './components/icons/View2ColIcon';
 import { View3ColIcon } from './components/icons/View3ColIcon';
 import { TransactionHistory } from './components/TransactionHistory';
 import { addHistory } from './utils/history';
+import { getLocalCollections, updateLocalCollection } from './utils/collections';
 
 // Utility function to shuffle an array
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -37,17 +38,13 @@ const App: React.FC = () => {
   
   const wallet = useTonWallet();
   
-  // Fetch collections from the API on mount
+  // Fetch collections from local storage on mount
   useEffect(() => {
     const fetchCollections = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        const response = await fetch('/api/collections');
-        if (!response.ok) {
-          throw new Error('Failed to fetch collections');
-        }
-        const data: Collection[] = await response.json();
+        const data = await getLocalCollections();
         setCollections(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
@@ -138,8 +135,7 @@ const App: React.FC = () => {
   };
   
   const handleSuccessfulTransaction = async (updatedCollection: Collection) => {
-    // Optimistically update the UI
-    const previousCollections = collections;
+    // Update the UI state
     setCollections(prev => prev.map(c => c.id === updatedCollection.id ? updatedCollection : c));
     
     // Add to local transaction history
@@ -154,24 +150,12 @@ const App: React.FC = () => {
       addHistory(wallet.account.address, newRecord);
     }
     
-    // Persist the change to the server
+    // Persist the change to local storage
     try {
-      const response = await fetch('/api/collections', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedCollection),
-      });
-      if (!response.ok) {
-        // If the API call fails, revert the optimistic update
-        setCollections(previousCollections);
-        console.error("Failed to save collection update to server");
-        // Optionally show a toast to the user
-      }
+      await updateLocalCollection(updatedCollection);
     } catch (error) {
-      setCollections(previousCollections);
-      console.error("Error saving collection update:", error);
+      console.error("Error saving collection update to local storage:", error);
+      // Optionally show a toast to the user that saving failed
     }
   };
 
