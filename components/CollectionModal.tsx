@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
+import { UserRejectsError } from '@tonconnect/ui';
 import type { Collection } from '../types';
 import { TonIcon } from './icons/TonIcon';
 import { UserGroupIcon } from './icons/UserGroupIcon';
 import { ClockIcon } from './icons/ClockIcon';
+import { Toast } from './Toast';
 
 
 interface CollectionModalProps {
@@ -64,6 +66,7 @@ const KickstarterInfo: React.FC<{ collection: Collection }> = ({ collection }) =
 export const CollectionModal: React.FC<CollectionModalProps> = ({ collection, onClose }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isMinting, setIsMinting] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [tonConnectUI] = useTonConnectUI();
   const wallet = useTonWallet();
 
@@ -85,13 +88,19 @@ export const CollectionModal: React.FC<CollectionModalProps> = ({ collection, on
     setTimeout(onClose, 300);
   };
 
+  const showToast = (message: string, type: 'success' | 'error' = 'error') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 5000); // Auto-hide after 5 seconds
+  };
+
+
   const handleMint = async () => {
     if (!wallet) {
-      alert('Please connect your wallet first.');
+      showToast('Please connect your wallet first.');
       return;
     }
     if (!collection.price || !collection.collectionAddress) {
-      alert('This collection is not available for minting at the moment.');
+      showToast('This collection is not available for minting at the moment.');
       return;
     }
 
@@ -112,13 +121,16 @@ export const CollectionModal: React.FC<CollectionModalProps> = ({ collection, on
 
     try {
       await tonConnectUI.sendTransaction(transaction);
-      alert('Transaction sent successfully! Please check your wallet for confirmation.');
-      handleClose();
+      showToast('Transaction sent successfully!', 'success');
+      // Optional: close modal on success after a short delay
+      // setTimeout(handleClose, 1500);
     } catch (error) {
-      console.error('Transaction error:', error);
-      // It's common for the error to be an empty object when the user cancels the transaction.
-      // We provide a generic message in that case.
-      alert('Transaction was cancelled or failed.');
+      if (error instanceof UserRejectsError) {
+        showToast('Transaction was cancelled.', 'error');
+      } else {
+        console.error('Transaction error:', error);
+        showToast('An unknown error occurred.', 'error');
+      }
     } finally {
       setIsMinting(false);
     }
@@ -152,6 +164,14 @@ export const CollectionModal: React.FC<CollectionModalProps> = ({ collection, on
       role="dialog"
     >
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" aria-hidden="true"></div>
+
+       {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
 
       <div
         className={`relative w-full max-w-lg m-4 bg-slate-900 rounded-2xl shadow-2xl shadow-slate-500/10 overflow-hidden transition-all duration-300 ease-out ${

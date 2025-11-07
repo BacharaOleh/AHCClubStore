@@ -7,6 +7,11 @@ const getFutureDate = (days: number): string => {
   return date.toISOString();
 }
 
+// NOTE: This is the central wallet address for the store.
+// All minting/backing transactions for collections will be sent to this address.
+const STORE_WALLET_ADDRESS = 'UQCw9Rg6XOwKRehOD2qBOscw67s58Bv715f-lVMWbELFpRLm';
+
+
 export const collections: Collection[] = [
   {
     id: 'col1',
@@ -15,7 +20,7 @@ export const collections: Collection[] = [
     creatorAvatarUrl: 'https://storage.googleapis.com/aistudio-hosting/workspace-assets/original/a0a10c71-3a0e-4c7a-9c7b-7b567d022b3b.jpeg',
     coverImageUrl: 'https://storage.googleapis.com/aistudio-hosting/workspace-assets/original/a0a10c71-3a0e-4c7a-9c7b-7b567d022b3b.jpeg',
     status: 'released',
-    collectionAddress: 'EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c',
+    collectionAddress: STORE_WALLET_ADDRESS,
     price: '0.05',
     stickers: [
       { id: 's1', name: 'Panda Sticker 1', imageUrl: 'https://picsum.photos/seed/panda1/200/200' },
@@ -33,7 +38,7 @@ export const collections: Collection[] = [
     creatorAvatarUrl: 'https://picsum.photos/seed/larva/100/100',
     coverImageUrl: 'https://picsum.photos/seed/punks-cover/600/400',
     status: 'released',
-    collectionAddress: 'EQBp43CV55wkmf-sL5hUIu2g6z-ttrgP9x3aKR23Ww-O2E1O',
+    collectionAddress: STORE_WALLET_ADDRESS,
     price: '1.5',
     stickers: [
       { id: 's7', name: 'Punk #7523', imageUrl: 'https://picsum.photos/seed/punk1/200/200' },
@@ -49,7 +54,7 @@ export const collections: Collection[] = [
     creatorAvatarUrl: 'https://i.ibb.co/sJFk6Y25/photo-2025-04-16-19-42-48.jpg',
     coverImageUrl: 'https://i.ibb.co/jkR06mLs/photo-2025-11-07-05-02-02.jpg',
     status: 'kickstarter',
-    collectionAddress: 'EQDsl3l2Y9n5a5ri2_e1WJc-k_bO526Nn2ed2IuL3dY2sBfM',
+    collectionAddress: STORE_WALLET_ADDRESS,
     price: '1', // Pledge amount
     fundingGoal: 10,
     fundingRaised: 7.8,
@@ -70,7 +75,7 @@ export const collections: Collection[] = [
     creatorAvatarUrl: 'https://picsum.photos/seed/doodles-creator/100/100',
     coverImageUrl: 'https://picsum.photos/seed/doodles-cover/600/400',
     status: 'released',
-    collectionAddress: 'EQD26-L3g-eQ6b6Xaa-e-k8-a8-a-k-a-b-e-k-Q',
+    collectionAddress: STORE_WALLET_ADDRESS,
     price: '0.75',
     stickers: [
       { id: 's16', name: 'Doodle #2238', imageUrl: 'https://picsum.photos/seed/doodle1/200/200' },
@@ -85,7 +90,7 @@ export const collections: Collection[] = [
     creatorAvatarUrl: 'https://e7.pngegg.com/pngimages/761/800/png-clipart-panda-eating-bamboo-eating-panda-animals-pandas.png',
     coverImageUrl: 'https://i.ibb.co/JRZgyfP8/photo-2025-09-30-00-23-25-2.jpg',
     status: 'kickstarter',
-    collectionAddress: 'EQC4gPy76c-3tI-d-e-f-i-n-i-t-e-l-y-a-d-d-r-e-s',
+    collectionAddress: STORE_WALLET_ADDRESS,
     price: '2.5', // Pledge amount
     fundingGoal: 25,
     fundingRaised: 12.1,
@@ -105,7 +110,7 @@ export const collections: Collection[] = [
     creatorAvatarUrl: 'https://picsum.photos/seed/coolcats-creator/100/100',
     coverImageUrl: 'https://picsum.photos/seed/coolcats-cover/600/400',
     status: 'released',
-    collectionAddress: 'EQB-a72-B-a-l-a-n-c-e-i-s-z-e-r-o-p-l-e-a-s',
+    collectionAddress: STORE_WALLET_ADDRESS,
     price: '0.1',
     stickers: [
       { id: 's23', name: 'Cool Cat #1490', imageUrl: 'https://picsum.photos/seed/cat1/200/200' },
