@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import { UserRejectsError } from '@tonconnect/ui';
@@ -11,6 +12,7 @@ import { Toast } from './Toast';
 interface CollectionModalProps {
   collection: Collection;
   onClose: () => void;
+  onPledgeSuccess: (collectionId: string, amount: string) => void;
 }
 
 const getDaysLeft = (endDateString?: string) => {
@@ -37,7 +39,7 @@ const KickstarterInfo: React.FC<{ collection: Collection }> = ({ collection }) =
         <div className="my-6">
             <div className="w-full bg-slate-700 rounded-full h-2.5">
                 <div 
-                    className="bg-slate-200 h-2.5 rounded-full" 
+                    className="bg-green-400 h-2.5 rounded-full transition-all duration-500" 
                     style={{ width: `${progress}%` }}
                 ></div>
             </div>
@@ -47,7 +49,7 @@ const KickstarterInfo: React.FC<{ collection: Collection }> = ({ collection }) =
                     <p className="text-xs text-slate-400">Funded</p>
                 </div>
                  <div>
-                    <p className="text-xl font-bold flex items-center justify-center gap-1"><TonIcon className="w-4 h-4" />{collection.fundingRaised}</p>
+                    <p className="text-xl font-bold flex items-center justify-center gap-1"><TonIcon className="w-4 h-4" />{collection.fundingRaised?.toFixed(2) || '0'}</p>
                     <p className="text-xs text-slate-400">Raised of {collection.fundingGoal} TON</p>
                 </div>
                  <div>
@@ -63,9 +65,9 @@ const KickstarterInfo: React.FC<{ collection: Collection }> = ({ collection }) =
     );
 };
 
-export const CollectionModal: React.FC<CollectionModalProps> = ({ collection, onClose }) => {
+export const CollectionModal: React.FC<CollectionModalProps> = ({ collection, onClose, onPledgeSuccess }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [isMinting, setIsMinting] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [tonConnectUI] = useTonConnectUI();
   const wallet = useTonWallet();
@@ -94,17 +96,17 @@ export const CollectionModal: React.FC<CollectionModalProps> = ({ collection, on
   };
 
 
-  const handleMint = async () => {
+  const handleTransaction = async () => {
     if (!wallet) {
       showToast('Please connect your wallet first.');
       return;
     }
     if (!collection.price || !collection.collectionAddress) {
-      showToast('This collection is not available for minting at the moment.');
+      showToast('This collection is not available for purchase at the moment.');
       return;
     }
 
-    setIsMinting(true);
+    setIsProcessing(true);
 
     const amountInNanotons = (parseFloat(collection.price) * 1e9).toString();
 
@@ -114,16 +116,20 @@ export const CollectionModal: React.FC<CollectionModalProps> = ({ collection, on
         {
           address: collection.collectionAddress,
           amount: amountInNanotons,
-          // payload: btoa(`Mint ${collection.name}`) // Example of a simple text payload
         },
       ],
     };
 
     try {
       await tonConnectUI.sendTransaction(transaction);
-      showToast('Transaction sent successfully!', 'success');
-      // Optional: close modal on success after a short delay
-      // setTimeout(handleClose, 1500);
+      
+      const successMessage = collection.status === 'kickstarter' 
+        ? 'Pledge successful! Thank you for your support.'
+        : 'Purchase successful!';
+        
+      showToast(successMessage, 'success');
+      onPledgeSuccess(collection.id, collection.price);
+      
     } catch (error) {
       if (error instanceof UserRejectsError) {
         showToast('Transaction was cancelled.', 'error');
@@ -132,7 +138,7 @@ export const CollectionModal: React.FC<CollectionModalProps> = ({ collection, on
         showToast('An unknown error occurred.', 'error');
       }
     } finally {
-      setIsMinting(false);
+      setIsProcessing(false);
     }
   };
 
@@ -144,12 +150,12 @@ export const CollectionModal: React.FC<CollectionModalProps> = ({ collection, on
 
     return (
       <button
-        onClick={handleMint}
-        disabled={isMinting || !collection.price || !collection.collectionAddress}
+        onClick={handleTransaction}
+        disabled={isProcessing || !collection.price || !collection.collectionAddress}
         className="w-full flex items-center justify-center gap-2 bg-slate-100 text-slate-900 font-bold py-3 px-6 rounded-full text-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
       >
         <TonIcon className="w-6 h-6" />
-        {isMinting ? 'Processing...' : buttonText}
+        {isProcessing ? 'Processing...' : buttonText}
       </button>
     );
   };

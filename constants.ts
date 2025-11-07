@@ -1,3 +1,4 @@
+
 import type { Collection } from './types';
 
 // Helper to create a future date for Kickstarter campaigns
@@ -57,8 +58,8 @@ export const collections: Collection[] = [
     collectionAddress: STORE_WALLET_ADDRESS,
     price: '1', // Pledge amount
     fundingGoal: 10,
-    fundingRaised: 7.8,
-    backers: 124,
+    fundingRaised: 0,
+    backers: 0,
     endDate: getFutureDate(15),
     stickers: [
       { id: 's11', name: 'Azuki #9605', imageUrl: 'https://picsum.photos/seed/azuki1/200/200' },
@@ -91,10 +92,10 @@ export const collections: Collection[] = [
     coverImageUrl: 'https://i.ibb.co/JRZgyfP8/photo-2025-09-30-00-23-25-2.jpg',
     status: 'kickstarter',
     collectionAddress: STORE_WALLET_ADDRESS,
-    price: '2.5', // Pledge amount
+    price: '0.1', // Pledge amount
     fundingGoal: 25,
-    fundingRaised: 12.1,
-    backers: 350,
+    fundingRaised: 0,
+    backers: 0,
     endDate: getFutureDate(28),
     stickers: [
       { id: 's19', name: 'Moonbird #2642', imageUrl: 'https://picsum.photos/seed/bird1/200/200' },

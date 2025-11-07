@@ -18,6 +18,15 @@ export interface Collection {
   // Optional fields for Kickstarter campaigns
   fundingGoal?: number;
   fundingRaised?: number;
+
   backers?: number;
   endDate?: string; // ISO 8601 date string
+}
+
+export interface TransactionRecord {
+    collectionId: string;
+    collectionName: string;
+    amount: string;
+    date: string; // ISO 8601 date string
+    type: 'purchase' | 'pledge';
 }

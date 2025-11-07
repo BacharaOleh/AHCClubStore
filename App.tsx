@@ -1,14 +1,18 @@
+
 import React, { useState, useEffect } from 'react';
+import { useTonWallet } from '@tonconnect/ui-react';
 import { Header } from './components/Header';
 import { CollectionCard } from './components/CollectionCard';
 import { Footer } from './components/Footer';
 import { collections as initialCollections } from './constants';
-import type { Collection } from './types';
+import type { Collection, TransactionRecord } from './types';
 import { CollectionModal } from './components/CollectionModal';
 import { NavBar } from './components/NavBar';
 import { View1ColIcon } from './components/icons/View1ColIcon';
 import { View2ColIcon } from './components/icons/View2ColIcon';
 import { View3ColIcon } from './components/icons/View3ColIcon';
+import { TransactionHistory } from './components/TransactionHistory';
+import { addHistory } from './utils/history';
 
 // Utility function to shuffle an array
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -25,11 +29,13 @@ const App: React.FC = () => {
   const [introVisible, setIntroVisible] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
   const [activeCategory, setActiveCategory] = useState('Featured');
+  const [collections, setCollections] = useState<Collection[]>(initialCollections);
   const [displayedCollections, setDisplayedCollections] = useState<Collection[]>([]);
   const [contentVisible, setContentVisible] = useState(false);
   const [gridCols, setGridCols] = useState(3);
   const [collectionStatus, setCollectionStatus] = useState<'released' | 'kickstarter'>('released');
-
+  
+  const wallet = useTonWallet();
 
   useEffect(() => {
     // Trigger animations on mount
@@ -57,22 +63,25 @@ const App: React.FC = () => {
       let collectionsToDisplay: Collection[];
       switch (activeCategory) {
         case 'Trending':
-          collectionsToDisplay = shuffleArray([...initialCollections]);
+          collectionsToDisplay = shuffleArray([...collections]);
           break;
         case 'Newest':
-          collectionsToDisplay = [...initialCollections].reverse();
+          collectionsToDisplay = [...collections].reverse();
           break;
         case 'My Collections':
-          collectionsToDisplay = [];
+          collectionsToDisplay = []; // This category is now handled by wallet logic, but we keep it for structure
+          break;
+        case 'My Activity':
+          collectionsToDisplay = []; // This will be handled by the TransactionHistory component
           break;
         case 'Featured':
         default:
-          collectionsToDisplay = [...initialCollections];
+          collectionsToDisplay = [...collections];
           break;
       }
 
-      // Filter by status, but not for "My Collections"
-      if (activeCategory !== 'My Collections') {
+      // Filter by status, but not for "My Collections" or "My Activity"
+      if (activeCategory !== 'My Collections' && activeCategory !== 'My Activity') {
         collectionsToDisplay = collectionsToDisplay.filter(c => c.status === collectionStatus);
       }
 
@@ -81,7 +90,7 @@ const App: React.FC = () => {
     }, 300); // Duration of fade transition
 
     return () => clearTimeout(timer);
-  }, [activeCategory, collectionStatus]);
+  }, [activeCategory, collectionStatus, collections]);
 
 
   const handleCategoryChange = (category: string) => {
@@ -95,6 +104,40 @@ const App: React.FC = () => {
         setCollectionStatus(status);
     }
   };
+  
+  const handleSuccessfulPledge = (collectionId: string, amountStr: string) => {
+    const amount = parseFloat(amountStr);
+    
+    // Update collection state
+    setCollections(prevCollections =>
+      prevCollections.map(c => {
+        if (c.id === collectionId && c.status === 'kickstarter') {
+          return {
+            ...c,
+            fundingRaised: (c.fundingRaised || 0) + amount,
+            backers: (c.backers || 0) + 1,
+          };
+        }
+        return c;
+      })
+    );
+
+    // Add to transaction history if wallet is connected
+    if (wallet) {
+      const collection = collections.find(c => c.id === collectionId);
+      if (collection) {
+          const newRecord: TransactionRecord = {
+            collectionId: collection.id,
+            collectionName: collection.name,
+            amount: amountStr,
+            date: new Date().toISOString(),
+            type: collection.status === 'kickstarter' ? 'pledge' : 'purchase'
+          };
+          addHistory(wallet.account.address, newRecord);
+      }
+    }
+  };
+
 
   const getGridClass = (cols: number): string => {
     switch (cols) {
@@ -107,6 +150,41 @@ const App: React.FC = () => {
         return 'grid-cols-3';
     }
   };
+  
+  const renderContent = () => {
+    if (activeCategory === 'My Activity') {
+      return <TransactionHistory walletAddress={wallet?.account.address ?? null} />;
+    }
+
+    if (displayedCollections.length > 0) {
+      return (
+        <div className={`grid ${getGridClass(gridCols)} gap-6 md:gap-8`}>
+          {displayedCollections.map((collection, index) => (
+            <div
+              key={`${collection.id}-${activeCategory}-${collectionStatus}`} // Use a key that changes with category to re-trigger animations
+              className="animate-fade-in"
+              style={{ animationFillMode: 'backwards', animationDelay: `${index * 100}ms` }}
+            >
+              <CollectionCard collection={collection} onClick={() => setSelectedCollection(collection)} />
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="text-center py-16 animate-fade-in">
+        <h3 className="text-2xl font-bold text-slate-400">Nothing here... yet!</h3>
+        <p className="text-slate-500 mt-2">
+          {activeCategory === 'My Collections' 
+            ? "You haven't collected any sticker packs."
+            : `There are no ${collectionStatus} collections in this category.`
+          }
+        </p>
+      </div>
+    );
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0D1117] to-[#010409] text-white overflow-x-hidden">
@@ -128,67 +206,47 @@ const App: React.FC = () => {
           </div>
 
           <div className="mt-12 md:mt-16">
-            <div className="flex justify-end items-center gap-4 mb-4">
-               {/* Status Switch */}
-               <div className="flex items-center gap-1 p-1 bg-slate-800 rounded-full">
-                {(['Released', 'Kickstarter'] as const).map(status => (
-                  <button
-                    key={status}
-                    onClick={() => handleStatusChange(status.toLowerCase() as 'released' | 'kickstarter')}
-                    className={`px-3 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 focus:outline-none ${
-                      collectionStatus === status.toLowerCase() ? 'bg-slate-200 text-slate-900 font-bold' : 'text-slate-400 hover:bg-slate-700'
-                    }`}
-                  >
-                    {status}
-                  </button>
-                ))}
-              </div>
-              {/* Grid Layout Switch */}
-              <div className="flex items-center gap-1 p-1 bg-slate-800 rounded-full">
-                {[1, 2, 3].map(cols => (
-                  <button
-                    key={cols}
-                    onClick={() => setGridCols(cols)}
-                    className={`p-2 rounded-full transition-colors duration-200 focus:outline-none ${
-                      gridCols === cols ? 'bg-slate-200 text-slate-900' : 'text-slate-400 hover:bg-slate-700'
-                    }`}
-                    aria-label={`Set ${cols} column layout`}
-                  >
-                    {cols === 1 && <View1ColIcon className="w-5 h-5" />}
-                    {cols === 2 && <View2ColIcon className="w-5 h-5" />}
-                    {cols === 3 && <View3ColIcon className="w-5 h-5" />}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {activeCategory !== 'My Activity' && (
+                <div className="flex justify-end items-center gap-4 mb-4">
+                {/* Status Switch */}
+                <div className="flex items-center gap-1 p-1 bg-slate-800 rounded-full">
+                    {(['Released', 'Kickstarter'] as const).map(status => (
+                    <button
+                        key={status}
+                        onClick={() => handleStatusChange(status.toLowerCase() as 'released' | 'kickstarter')}
+                        className={`px-3 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 focus:outline-none ${
+                        collectionStatus === status.toLowerCase() ? 'bg-slate-200 text-slate-900 font-bold' : 'text-slate-400 hover:bg-slate-700'
+                        }`}
+                    >
+                        {status}
+                    </button>
+                    ))}
+                </div>
+                {/* Grid Layout Switch */}
+                <div className="flex items-center gap-1 p-1 bg-slate-800 rounded-full">
+                    {[1, 2, 3].map(cols => (
+                    <button
+                        key={cols}
+                        onClick={() => setGridCols(cols)}
+                        className={`p-2 rounded-full transition-colors duration-200 focus:outline-none ${
+                        gridCols === cols ? 'bg-slate-200 text-slate-900' : 'text-slate-400 hover:bg-slate-700'
+                        }`}
+                        aria-label={`Set ${cols} column layout`}
+                    >
+                        {cols === 1 && <View1ColIcon className="w-5 h-5" />}
+                        {cols === 2 && <View2ColIcon className="w-5 h-5" />}
+                        {cols === 3 && <View3ColIcon className="w-5 h-5" />}
+                    </button>
+                    ))}
+                </div>
+                </div>
+            )}
             <div
               className={`transition-opacity duration-300 ${
                 contentVisible ? 'opacity-100' : 'opacity-0'
               }`}
             >
-              {displayedCollections.length > 0 ? (
-                <div className={`grid ${getGridClass(gridCols)} gap-6 md:gap-8`}>
-                  {displayedCollections.map((collection, index) => (
-                    <div
-                      key={`${collection.id}-${activeCategory}-${collectionStatus}`} // Use a key that changes with category to re-trigger animations
-                      className="animate-fade-in"
-                      style={{ animationFillMode: 'backwards', animationDelay: `${index * 100}ms` }}
-                    >
-                      <CollectionCard collection={collection} onClick={() => setSelectedCollection(collection)} />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-16 animate-fade-in">
-                  <h3 className="text-2xl font-bold text-slate-400">Nothing here... yet!</h3>
-                  <p className="text-slate-500 mt-2">
-                    {activeCategory === 'My Collections' 
-                      ? "You haven't collected any sticker packs."
-                      : `There are no ${collectionStatus} collections in this category.`
-                    }
-                  </p>
-                </div>
-              )}
+              {renderContent()}
             </div>
           </div>
         </main>
@@ -198,6 +256,7 @@ const App: React.FC = () => {
         <CollectionModal 
           collection={selectedCollection}
           onClose={() => setSelectedCollection(null)}
+          onPledgeSuccess={handleSuccessfulPledge}
         />
       )}
     </div>

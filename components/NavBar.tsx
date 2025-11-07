@@ -1,6 +1,7 @@
+
 import React from 'react';
 
-const categories = ['Featured', 'Trending', 'Newest', 'My Collections'];
+const categories = ['Featured', 'Trending', 'Newest', 'My Activity'];
 
 interface NavBarProps {
   activeCategory: string;
