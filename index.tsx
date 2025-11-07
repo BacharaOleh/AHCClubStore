@@ -10,10 +10,6 @@ if (!rootElement) {
 }
 
 // Dynamically create the manifest object in the client.
-// This solves two problems:
-// 1. It avoids the "new URL()" constructor error with relative paths.
-// 2. It ensures the `url` field in the manifest always matches the
-//    current app's origin, which is required by TonConnect for security.
 const manifest = {
   url: window.location.origin,
   name: "Alternative Store",
@@ -21,10 +17,14 @@ const manifest = {
   iconUrl: "https://storage.googleapis.com/aistudio-hosting/workspace-assets/original/a0a10c71-3a0e-4c7a-9c7b-7b567d022b3b.jpeg"
 };
 
-// Create a blob from the manifest JSON.
-const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-// Create a URL for the blob.
-const manifestUrl = URL.createObjectURL(manifestBlob);
+// Create a data URL from the manifest JSON. This is more robust than a blob URL
+// as it can be used by external wallets (e.g., via QR code) because the content
+// is embedded directly in the URL.
+const manifestJson = JSON.stringify(manifest);
+// Use unescape and encodeURIComponent for robust UTF-8 to Base64 encoding.
+const manifestBase64 = btoa(unescape(encodeURIComponent(manifestJson)));
+const manifestUrl = `data:application/json;base64,${manifestBase64}`;
+
 
 const root = ReactDOM.createRoot(rootElement);
 root.render(
