@@ -1,0 +1,14 @@
+import React from 'react';
+
+export const View2ColIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg
+    {...props}
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <rect x="3" y="3" width="8" height="18" rx="2"></rect>
+    <rect x="13" y="3" width="8" height="18" rx="2"></rect>
+  </svg>
+);
