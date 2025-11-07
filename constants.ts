@@ -118,5 +118,5 @@ export const collections: Collection[] = [
       { id: 's24', name: 'Cool Cat #3330', imageUrl: 'https://picsum.photos/seed/cat2/200/200' },
       { id: 's25', name: 'Cool Cat #4669', imageUrl: 'https://picsum.photos/seed/cat3/200/200' },
     ],
-  },
+  }
 ];
