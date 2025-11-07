@@ -32,7 +32,22 @@ export const collections: Collection[] = [
       { id: 's6', name: 'Panda Sticker 6', imageUrl: 'https://picsum.photos/seed/panda6/200/200' },
     ],
   },
-
+  {
+    id: 'col2',
+    name: 'CryptoPunks',
+    creator: 'Larva Labs',
+    creatorAvatarUrl: 'https://picsum.photos/seed/larva/100/100',
+    coverImageUrl: 'https://picsum.photos/seed/punks-cover/600/400',
+    status: 'released',
+    collectionAddress: STORE_WALLET_ADDRESS,
+    price: '1.5',
+    stickers: [
+      { id: 's7', name: 'Punk #7523', imageUrl: 'https://picsum.photos/seed/punk1/200/200' },
+      { id: 's8', name: 'Punk #3100', imageUrl: 'https://picsum.photos/seed/punk2/200/200' },
+      { id: 's9', name: 'Punk #7804', imageUrl: 'https://picsum.photos/seed/punk3/200/200' },
+      { id: 's10', name: 'Punk #5822', imageUrl: 'https://picsum.photos/seed/punk4/200/200' },
+    ],
+  },
   {
     id: 'col3',
     name: 'Aid_crypto',
@@ -54,7 +69,41 @@ export const collections: Collection[] = [
       { id: 's15', name: 'Azuki #3333', imageUrl: 'https://picsum.photos/seed/azuki5/200/200' },
     ],
   },
-  
+   {
+    id: 'col4',
+    name: 'Doodles',
+    creator: 'Burnt Toast',
+    creatorAvatarUrl: 'https://picsum.photos/seed/doodles-creator/100/100',
+    coverImageUrl: 'https://picsum.photos/seed/doodles-cover/600/400',
+    status: 'released',
+    collectionAddress: STORE_WALLET_ADDRESS,
+    price: '0.75',
+    stickers: [
+      { id: 's16', name: 'Doodle #2238', imageUrl: 'https://picsum.photos/seed/doodle1/200/200' },
+      { id: 's17', name: 'Doodle #6914', imageUrl: 'https://picsum.photos/seed/doodle2/200/200' },
+      { id: 's18', name: 'Doodle #776', imageUrl: 'https://picsum.photos/seed/doodle3/200/200' },
+    ],
+  },
+  {
+    id: 'col5',
+    name: 'AHC',
+    creator: 'Alternative Holders Club',
+    creatorAvatarUrl: 'https://e7.pngegg.com/pngimages/761/800/png-clipart-panda-eating-bamboo-eating-panda-animals-pandas.png',
+    coverImageUrl: 'https://i.ibb.co/JRZgyfP8/photo-2025-09-30-00-23-25-2.jpg',
+    status: 'kickstarter',
+    collectionAddress: STORE_WALLET_ADDRESS,
+    price: '0.1', // Pledge amount
+    fundingGoal: 25,
+    fundingRaised: 0,
+    backers: 0,
+    endDate: getFutureDate(28),
+    stickers: [
+      { id: 's19', name: 'Moonbird #2642', imageUrl: 'https://picsum.photos/seed/bird1/200/200' },
+      { id: 's20', name: 'Moonbird #7963', imageUrl: 'https://picsum.photos/seed/bird2/200/200' },
+      { id: 's21', name: 'Moonbird #6225', imageUrl: 'https://picsum.photos/seed/bird3/200/200' },
+      { id: 's22', name: 'Moonbird #3730', imageUrl: 'https://picsum.photos/seed/bird4/200/200' },
+    ],
+  },
   {
     id: 'col6',
     name: 'Cool Cats',
